@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadowdark Encounter Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Montserrat:ital,wght@0,400;0,600;0,700;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --off-black: #111111;
+    --dark: #1a1a1a;
+    --mid: #2e2e2e;
+    --border: #3a3a3a;
+    --dim: #666666;
+    --light: #aaaaaa;
+    --white: #f0f0f0;
+    --off-white: #e0e0e0;
+    --accent: #ffffff;
+    --ink: #0a0a0a;
+    --text: #e8e8e8;
+    --text-dim: #999999;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--black);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.055'/%3E%3C/svg%3E");
+    min-height: 100vh;
+    font-family: 'Montserrat', sans-serif;
+    color: var(--text);
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    padding: 40px 20px 30px;
+    position: relative;
+  }
+
+  .header::before, .header::after {
+    content: '';
+    display: block;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 10px 0;
+  }
+
+  .header-ornament {
+    font-size: 20px;
+    color: var(--dim);
+    letter-spacing: 12px;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: clamp(36px, 7vw, 72px);
+    color: var(--white);
+    text-shadow: 
+      2px 2px 0 var(--black),
+      0 0 30px rgba(255,255,255,0.08);
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* PANELS */
+  .panel {
+    background: var(--off-black);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    position: relative;
+    box-shadow: 
+      4px 4px 0 var(--black),
+      0 4px 24px rgba(0,0,0,0.8);
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid var(--mid);
+    pointer-events: none;
+  }
+
+  .panel-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  @media (max-width: 640px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* FORM FIELDS */
+  .field { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 6px;
+  }
+
+  select, input[type="range"] {
+    width: 100%;
+  }
+
+  select {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-bottom: 2px solid var(--light);
+    padding: 9px 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M6 8L0 0h12z' fill='%23666666'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 10px;
+    transition: border-color 0.2s, background-color 0.2s;
+    border-radius: 0;
+  }
+
+  select:focus {
+    outline: none;
+    border-color: var(--white);
+    background-color: var(--mid);
+  }
+
+  /* HAZARD LEVEL SLIDER */
+  .hazard-display {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 4px;
+  }
+
+  .hazard-number {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--white);
+    min-width: 44px;
+    text-align: center;
+    line-height: 1;
+  }
+
+  .hazard-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    height: 3px;
+    background: linear-gradient(90deg, var(--white) 0%, var(--light) var(--val, 50%), var(--border) var(--val, 50%));
+    border-radius: 0;
+    cursor: pointer;
+    flex: 1;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--white);
+    border: 2px solid var(--black);
+    border-radius: 0;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  }
+
+  /* GENERATE BUTTON */
+  .btn-generate {
+    width: 100%;
+    padding: 18px;
+    background: var(--white);
+    border: 2px solid var(--white);
+    border-bottom: 4px solid var(--dim);
+    color: var(--black);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.12s;
+    position: relative;
+    border-radius: 0;
+    box-shadow: 4px 4px 0 rgba(255,255,255,0.15);
+    margin-top: 8px;
+  }
+
+  .btn-generate:hover {
+    background: var(--off-white);
+    transform: translateY(-1px);
+    box-shadow: 5px 5px 0 rgba(255,255,255,0.2);
+  }
+
+  .btn-generate:active {
+    transform: translateY(2px);
+    border-bottom-width: 2px;
+    box-shadow: 2px 2px 0 rgba(255,255,255,0.1);
+  }
+
+  .btn-generate:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* DICE ICON */
+  .dice-icon {
+    margin-right: 10px;
+    font-size: 18px;
+  }
+
+  /* OUTPUT */
+  #output {
+    display: none;
+  }
+
+  .output-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: gap;
+  }
+
+  .output-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--white);
+  }
+
+  .btn-copy {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 0;
+  }
+
+  .btn-copy:hover {
+    border-color: var(--white);
+    color: var(--white);
+  }
+
+  /* ENCOUNTER TABLE */
+  .encounter-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .encounter-table th {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--dim);
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    background: var(--dark);
+  }
+
+  .encounter-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--mid);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  .encounter-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .encounter-table tr:hover td {
+    background: rgba(255,255,255,0.03);
+  }
+
+  .dice-result {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 16px;
+    color: var(--white);
+    white-space: nowrap;
+  }
+
+  .creature-name {
+    font-weight: 700;
+    color: var(--off-white);
+  }
+
+  .creature-count {
+    color: var(--light);
+    font-weight: 600;
+  }
+
+  .creature-level {
+    font-size: 11px;
+    color: var(--dim);
+    font-style: italic;
+  }
+
+  .activity-text {
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  .danger-badge {
+    display: inline-block;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 7px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 0;
+  }
+
+  .danger-safe { background: transparent; color: var(--light); border: 1px solid var(--border); }
+  .danger-unsafe { background: transparent; color: var(--off-white); border: 1px solid var(--light); }
+  .danger-risky { background: rgba(255,255,255,0.08); color: var(--white); border: 1px solid var(--off-white); }
+  .danger-deadly { background: var(--white); color: var(--black); border: 1px solid var(--white); }
+
+  .no-encounter {
+    color: var(--dim);
+    font-style: italic;
+    font-size: 14px;
+  }
+
+  /* MARKDOWN OUTPUT */
+  .markdown-output {
+    margin-top: 20px;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+
+  .markdown-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 8px;
+  }
+
+  .markdown-pre {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    padding: 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+    border-radius: 0;
+    line-height: 1.5;
+  }
+
+  /* DECORATIVE DIVIDERS */
+  .ornament {
+    text-align: center;
+    color: var(--border);
+    font-size: 14px;
+    letter-spacing: 8px;
+    margin: 4px 0;
+  }
+
+  /* ANIMATION */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in {
+    animation: fadeInUp 0.4s ease forwards;
+  }
+
+  .encounter-table tr {
+    animation: fadeInUp 0.3s ease forwards;
+    opacity: 0;
+  }
+
+  .encounter-table tr:nth-child(1) { animation-delay: 0.05s; }
+  .encounter-table tr:nth-child(2) { animation-delay: 0.10s; }
+  .encounter-table tr:nth-child(3) { animation-delay: 0.15s; }
+  .encounter-table tr:nth-child(4) { animation-delay: 0.20s; }
+  .encounter-table tr:nth-child(5) { animation-delay: 0.25s; }
+  .encounter-table tr:nth-child(6) { animation-delay: 0.30s; }
+  .encounter-table tr:nth-child(7) { animation-delay: 0.35s; }
+  .encounter-table tr:nth-child(8) { animation-delay: 0.40s; }
+  .encounter-table tr:nth-child(9) { animation-delay: 0.45s; }
+  .encounter-table tr:nth-child(10) { animation-delay: 0.50s; }
+  .encounter-table tr:nth-child(11) { animation-delay: 0.55s; }
+  .encounter-table tr:nth-child(12) { animation-delay: 0.60s; }
+  .encounter-table tr:nth-child(13) { animation-delay: 0.65s; }
+  .encounter-table tr:nth-child(14) { animation-delay: 0.70s; }
+  .encounter-table tr:nth-child(15) { animation-delay: 0.75s; }
+  .encounter-table tr:nth-child(16) { animation-delay: 0.80s; }
+  .encounter-table tr:nth-child(n+17) { animation-delay: 0.85s; }
+
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: var(--black);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .warn {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    font-style: italic;
+    color: var(--dim);
+    font-size: 13px;
+    border-radius: 0;
+    margin-bottom: 12px;
+  }
+
+  .single-encounter-box {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    padding: 20px;
+    border-radius: 0;
+  }
+
+  .single-encounter-box h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 16px;
+  }
+
+  .single-encounter-box .detail-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: baseline;
+  }
+
+  .detail-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--dim);
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+
+  .detail-value {
+    font-size: 14px;
+    color: var(--text);
+  }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <span class="header-ornament">— ✦ —</span>
+    <h1>ShadowDark</h1>
+    <div class="subtitle">Encounter Generator</div>
+  </div>
+
+  <div class="ornament">— ✦ —</div>
+  <br>
+
+  <!-- SELECTION PANEL -->
+  <div class="panel">
+    <div class="panel-title">☽ What Lurks in the Dark</div>
+
+    <div class="grid-2" style="margin-bottom:20px;">
+      <div class="field">
+        <label for="biome">Biome</label>
+        <select id="biome">
+          <option value="">— Select Biome —</option>
+          <option value="Cave">Cave</option>
+          <option value="Ruin">Ruin</option>
+          <option value="Tomb">Tomb</option>
+          <option value="Temple of Chaos">Temple of Chaos</option>
+          <option value="Forest">Forest</option>
+          <option value="Jungle">Jungle</option>
+          <option value="Plains">Plains</option>
+          <option value="Hills">Hills</option>
+          <option value="Moor">Moor</option>
+          <option value="Mountains">Mountains</option>
+          <option value="Swamp">Swamp</option>
+          <option value="Coast / River / Lake">Coast / River / Lake</option>
+          <option value="Desert">Desert</option>
+          <option value="Arctic">Arctic</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Hazard Level (1–10)</label>
+        <div class="hazard-display">
+          <div>
+            <div class="hazard-number" id="hazardDisplay">5</div>
+            <div class="hazard-label">Hazard</div>
+          </div>
+          <input type="range" id="hazardLevel" min="1" max="10" value="5" oninput="updateHazard(this)">
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-bottom:20px;">
+      <div class="field">
+        <label for="partySize">Party Size</label>
+        <select id="partySize">
+          <option value="1">1 Adventurer</option>
+          <option value="2">2 Adventurers</option>
+          <option value="3">3 Adventurers</option>
+          <option value="4" selected>4 Adventurers</option>
+          <option value="5">5 Adventurers</option>
+          <option value="6">6 Adventurers</option>
+          <option value="7">7 Adventurers</option>
+          <option value="8">8 Adventurers</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="dualChance">Dual Creature Chance</label>
+        <select id="dualChance">
+          <option value="0">0% — Never</option>
+          <option value="10">10% — Rarely</option>
+          <option value="25" selected>25% — Sometimes</option>
+          <option value="50">50% — Often</option>
+          <option value="75">75% — Usually</option>
+          <option value="100">100% — Always</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="tableSize">Table Size</label>
+        <select id="tableSize">
+          <option value="2d6">2d6 Table (11 rows)</option>
+          <option value="2d8">2d8 Table (15 rows)</option>
+          <option value="single">Single Encounter</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-generate" id="generateBtn" onclick="generate()">
+      <span class="dice-icon">⚄</span> Consult the Darkness
+    </button>
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div class="panel fade-in" id="output">
+    <div class="output-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div class="output-title" id="outputTitle">⚔ Encounter Table</div>
+      <button class="btn-copy" onclick="copyMarkdown()" id="copyBtn">Copy Markdown</button>
+    </div>
+    <div id="tableContainer"></div>
+    <div class="markdown-output" id="markdownSection" style="display:none;">
+      <div class="markdown-label">Markdown Output</div>
+      <div class="markdown-pre" id="markdownOutput"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// CREATURE DATA
+// ============================================================
+const CREATURES = [
+  {name:"Aboleth",type:"Wildlife",level:8,biomes:["Coast / River / Lake"]},
+  {name:"Acolyte",type:"Human",level:1,biomes:["Ruin","Tomb","Temple of Chaos","Forest","Jungle","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Archangel",type:"Celestial",level:16,biomes:["Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Angel, Principi",type:"Celestial",level:11,biomes:["Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Angel, Domini",type:"Celestial",level:9,biomes:["Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Angel, Seraph",type:"Celestial",level:3,biomes:["Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Animated Armor",type:"Spirit",level:2,biomes:["Ruin","Tomb","Temple of Chaos"]},
+  {name:"Ankheg",type:"Wildlife",level:3,biomes:["Cave","Ruin","Moor","Desert"]},
+  {name:"Ape",type:"Wildlife",level:2,biomes:["Cave","Forest","Mountains","Swamp","Coast / River / Lake"]},
+  {name:"Ape, Snow",type:"Wildlife",level:4,biomes:["Arctic"]},
+  {name:"Apprentice",type:"Human",level:1,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Archmage",type:"Human",level:10,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Assassin",type:"Human",level:8,biomes:["Ruin","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Azer",type:"Fire",level:3,biomes:["Cave","Ruin","Mountains","Desert"]},
+  {name:"Badger",type:"Wildlife",level:1,biomes:["Forest","Plains","Hills","Moor","Swamp","Desert","Arctic"]},
+  {name:"Bandit",type:"Human",level:1,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Basilisk",type:"Wildlife",level:5,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Bat, Giant",type:"Wildlife",level:2,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Hills","Moor","Swamp"]},
+  {name:"Bat, Swarm",type:"Wildlife",level:4,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake"]},
+  {name:"Bear, Brown",type:"Wildlife",level:5,biomes:["Cave","Ruin","Forest","Jungle","Hills","Moor","Swamp","Coast / River / Lake"]},
+  {name:"Bear, Polar",type:"Wildlife",level:7,biomes:["Arctic"]},
+  {name:"Beastman",type:"",level:0,biomes:["Cave","Ruin","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Berserker",type:"Human",level:2,biomes:["Ruin","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Black Pudding",type:"Ooze",level:6,biomes:["Cave","Ruin","Moor","Swamp","Arctic"]},
+  {name:"Boar",type:"Wildlife",level:3,biomes:["Cave","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake"]},
+  {name:"Brain Eater",type:"",level:8,biomes:["Cave"]},
+  {name:"Bugbear",type:"Goblinoid",level:3,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Bulette",type:"Wildlife",level:8,biomes:["Cave","Ruin","Forest","Jungle","Hills","Moor","Swamp","Desert"]},
+  {name:"Camel",type:"Wildlife",level:2,biomes:["Jungle","Plains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Cave Brute",type:"",level:6,biomes:["Cave","Ruin","Moor"]},
+  {name:"Cave Creeper",type:"Wildlife",level:4,biomes:["Cave","Ruin","Tomb","Moor","Desert"]},
+  {name:"Centaur",type:"",level:3,biomes:["Forest","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Centipede, Giant",type:"Wildlife",level:1,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Moor","Swamp","Desert"]},
+  {name:"Centipede, Swarm",type:"Wildlife",level:4,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Moor","Swamp","Desert"]},
+  {name:"Chimera",type:"Wildlife",level:10,biomes:["Cave","Ruin","Temple of Chaos","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Chuul",type:"Wildlife",level:5,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Moor","Swamp","Coast / River / Lake"]},
+  {name:"Cloaker",type:"Wildlife",level:6,biomes:["Cave","Temple of Chaos"]},
+  {name:"Cockatrice",type:"Wildlife",level:3,biomes:["Ruin","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake"]},
+  {name:"Couatl",type:"Spirit",level:9,biomes:["Ruin","Forest","Jungle","Plains","Moor","Swamp","Coast / River / Lake"]},
+  {name:"Crab, Giant",type:"Wildlife",level:5,biomes:["Jungle","Moor","Swamp"]},
+  {name:"Crocodile",type:"Wildlife",level:4,biomes:["Jungle","Swamp","Coast / River / Lake"]},
+  {name:"Cultist",type:"Human",level:2,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Cyclops",type:"",level:8,biomes:["Cave","Ruin","Forest","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Darkmantle",type:"Wildlife",level:1,biomes:["Cave","Ruin","Tomb"]},
+  {name:"Deep One",type:"",level:2,biomes:["Cave","Moor","Coast / River / Lake"]},
+  {name:"Demon, Balor",type:"Demon",level:16,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Hills","Moor","Desert","Arctic"]},
+  {name:"Demon, Glabrezu",type:"Demon",level:8,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Plains","Hills","Moor","Swamp","Desert","Arctic"]},
+  {name:"Demon, Dretch",type:"Demon",level:2,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Moor","Swamp","Coast / River / Lake"]},
+  {name:"Demon, Marilith",type:"Demon",level:9,biomes:["Ruin","Tomb","Temple of Chaos","Jungle","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Demon, Vrock",type:"Demon",level:5,biomes:["Temple of Chaos","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Archdevil",type:"Devil",level:16,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Devil, Barbed",type:"Devil",level:3,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Devil, Cubi",type:"Devil",level:6,biomes:["Ruin","Tomb","Temple of Chaos","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Devil, Erinyes",type:"Devil",level:9,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Devil, Horned",type:"Devil",level:7,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Hills","Moor","Desert","Arctic"]},
+  {name:"Devil, Imp",type:"Devil",level:2,biomes:["Ruin","Tomb","Temple of Chaos","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Brachiosaurus",type:"Dinosaur",level:12,biomes:["Jungle","Plains","Swamp","Coast / River / Lake"]},
+  {name:"Triceratops",type:"Dinosaur",level:7,biomes:["Jungle","Plains","Swamp","Coast / River / Lake"]},
+  {name:"Pterodactyl",type:"Dinosaur",level:4,biomes:["Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake"]},
+  {name:"Tyrannosaurus",type:"Dinosaur",level:9,biomes:["Jungle","Plains","Swamp","Coast / River / Lake"]},
+  {name:"Plesiosaurus",type:"Dinosaur",level:6,biomes:["Coast / River / Lake"]},
+  {name:"Velociraptor",type:"Dinosaur",level:2,biomes:["Jungle","Plains","Hills","Swamp","Coast / River / Lake"]},
+  {name:"Djinni",type:"Air",level:10,biomes:["Ruin","Jungle","Plains","Moor","Swamp","Coast / River / Lake"]},
+  {name:"Doppelganger",type:"",level:4,biomes:["Cave","Ruin","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Dragon, Desert",type:"Dragon",level:13,biomes:["Desert"]},
+  {name:"Dragon, Fire",type:"Dragon",level:17,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Desert"]},
+  {name:"Dragon, Forest",type:"Dragon",level:12,biomes:["Forest","Jungle"]},
+  {name:"Dragon, Frost",type:"Dragon",level:14,biomes:["Mountains","Arctic"]},
+  {name:"Dragon, Sea",type:"Dragon",level:16,biomes:["Coast / River / Lake"]},
+  {name:"Dragon, Swamp",type:"Dragon",level:12,biomes:["Jungle","Swamp"]},
+  {name:"Drow",type:"Drow",level:2,biomes:["Cave","Ruin"]},
+  {name:"Drow, Priestess",type:"Drow",level:6,biomes:["Cave","Ruin"]},
+  {name:"Drider",type:"Drow",level:6,biomes:["Cave","Ruin"]},
+  {name:"Druid",type:"Human",level:7,biomes:["Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Dryad",type:"Fae",level:4,biomes:["Forest","Jungle","Hills","Moor","Swamp","Coast / River / Lake"]},
+  {name:"Duergar",type:"",level:2,biomes:["Cave"]},
+  {name:"Dung Beetle, Giant",type:"Wildlife",level:2,biomes:["Forest","Jungle","Swamp","Desert"]},
+  {name:"Efreeti",type:"Fire",level:9,biomes:["Ruin","Temple of Chaos","Jungle","Plains","Moor","Desert"]},
+  {name:"Elemental, Air (Lesser)",type:"Air",level:6,biomes:["Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Elemental, Air (Greater)",type:"Air",level:9,biomes:["Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Elemental, Earth (Lesser)",type:"Earth",level:6,biomes:["Cave","Mountains","Desert","Arctic"]},
+  {name:"Elemental, Earth (Greater)",type:"Earth",level:9,biomes:["Cave","Mountains","Desert","Arctic"]},
+  {name:"Elemental, Fire (Lesser)",type:"Fire",level:6,biomes:["Cave","Mountains","Desert"]},
+  {name:"Elemental, Fire (Greater)",type:"Fire",level:9,biomes:["Cave","Mountains","Desert"]},
+  {name:"Elemental, Water (Lesser)",type:"Water",level:6,biomes:["Jungle","Swamp","Coast / River / Lake","Arctic"]},
+  {name:"Elemental, Water (Greater)",type:"Water",level:9,biomes:["Jungle","Swamp","Coast / River / Lake","Arctic"]},
+  {name:"Elephant",type:"Wildlife",level:7,biomes:["Jungle","Plains","Swamp"]},
+  {name:"Elf",type:"Fae",level:2,biomes:["Ruin","Forest","Jungle","Swamp"]},
+  {name:"Ettercap",type:"Wildlife",level:3,biomes:["Cave","Ruin","Forest","Jungle","Moor","Swamp"]},
+  {name:"Fairy",type:"Fae",level:1,biomes:["Cave","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Frog, Giant",type:"Wildlife",level:2,biomes:["Cave","Forest","Jungle","Plains","Swamp","Coast / River / Lake"]},
+  {name:"Gargoyle",type:"Earth",level:4,biomes:["Ruin","Tomb","Temple of Chaos","Moor","Desert"]},
+  {name:"Gelatinous Cube",type:"Ooze",level:5,biomes:["Cave","Ruin"]},
+  {name:"Ghast",type:"Undead",level:4,biomes:["Ruin","Tomb","Temple of Chaos","Forest","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Ghoul",type:"Undead",level:2,biomes:["Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Ghost",type:"Undead",level:6,biomes:["Ruin","Tomb","Temple of Chaos","Forest","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Giant, Cloud",type:"Giant",level:10,biomes:["Plains","Mountains","Swamp","Desert"]},
+  {name:"Giant, Fire",type:"Giant",level:9,biomes:["Cave","Temple of Chaos","Mountains","Desert"]},
+  {name:"Giant, Frost",type:"Giant",level:9,biomes:["Arctic"]},
+  {name:"Giant, Stone",type:"Giant",level:8,biomes:["Cave","Mountains"]},
+  {name:"Giant, Goat",type:"Giant",level:8,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake"]},
+  {name:"Giant, Storm",type:"Giant",level:12,biomes:["Swamp","Arctic"]},
+  {name:"Giant, Hill",type:"Giant",level:7,biomes:["Cave","Ruin","Forest","Jungle","Hills","Moor","Mountains","Desert","Arctic"]},
+  {name:"Gibbering Mouther",type:"Outsider",level:4,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Gladiator",type:"Human",level:3,biomes:["Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Gnoll",type:"",level:2,biomes:["Cave","Ruin","Plains","Hills","Moor","Mountains","Desert","Arctic"]},
+  {name:"Gnome, Deep",type:"",level:3,biomes:["Cave","Ruin","Tomb","Moor","Desert"]},
+  {name:"Goblin",type:"Goblinoid",level:1,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Goblin, Boss",type:"Goblinoid",level:4,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Goblin, Shaman",type:"Goblinoid",level:4,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Golem, Clay",type:"Construct",level:8,biomes:["Ruin","Temple of Chaos","Jungle","Plains","Mountains","Swamp"]},
+  {name:"Golem, Flesh",type:"Construct",level:7,biomes:["Ruin","Temple of Chaos","Jungle","Plains","Hills","Mountains"]},
+  {name:"Golem, Iron",type:"Construct",level:10,biomes:["Ruin","Temple of Chaos","Mountains","Desert"]},
+  {name:"Golem, Stone",type:"Construct",level:8,biomes:["Ruin","Temple of Chaos","Mountains","Desert","Arctic"]},
+  {name:"Gorgon",type:"Construct",level:7,biomes:["Ruin","Temple of Chaos","Desert"]},
+  {name:"Gorilla",type:"Wildlife",level:4,biomes:["Jungle"]},
+  {name:"Gray Ooze",type:"Ooze",level:2,biomes:["Cave","Ruin","Moor"]},
+  {name:"Grick",type:"Wildlife",level:4,biomes:["Cave","Ruin","Mountains","Desert"]},
+  {name:"Griffon",type:"Wildlife",level:4,biomes:["Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Grimlow",type:"Wildlife",level:9,biomes:["Cave","Ruin","Forest","Plains","Hills","Moor","Mountains","Swamp","Arctic"]},
+  {name:"Guard",type:"Human",level:1,biomes:["Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Hag, Night",type:"Fae",level:8,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Moor","Desert"]},
+  {name:"Hag, Sea",type:"Fae",level:6,biomes:["Coast / River / Lake"]},
+  {name:"Hag, Weald",type:"Fae",level:6,biomes:["Forest","Jungle","Swamp"]},
+  {name:"Harpy",type:"",level:3,biomes:["Ruin","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Hell Hound",type:"Devil",level:4,biomes:["Ruin","Tomb","Temple of Chaos","Hills","Moor","Desert"]},
+  {name:"Hippogriff",type:"Wildlife",level:3,biomes:["Forest","Plains","Hills","Moor","Mountains"]},
+  {name:"Hippopotamus",type:"Wildlife",level:5,biomes:["Jungle","Plains","Swamp","Coast / River / Lake"]},
+  {name:"Hobgoblin",type:"Goblinoid",level:2,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Horse",type:"Wildlife",level:2,biomes:["Jungle","Plains","Hills","Mountains","Swamp","Coast / River / Lake"]},
+  {name:"Hydra",type:"Wildlife",level:4,biomes:["Cave","Jungle","Mountains","Swamp","Arctic"]},
+  {name:"Invisible Stalker",type:"Air",level:6,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Desert"]},
+  {name:"Jellyfish",type:"Wildlife",level:0,biomes:["Cave","Moor","Coast / River / Lake"]},
+  {name:"Knight",type:"Human",level:3,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Kobold",type:"Kobold",level:0,biomes:["Cave","Ruin","Forest","Jungle","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Kobold, Sorcerer",type:"Kobold",level:3,biomes:["Cave","Ruin","Forest","Jungle","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Kraken",type:"Wildlife",level:17,biomes:["Coast / River / Lake"]},
+  {name:"Leech, Giant",type:"Wildlife",level:2,biomes:["Jungle","Swamp","Coast / River / Lake"]},
+  {name:"Leprechaun",type:"Fae",level:4,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Lich",type:"Undead",level:13,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Moor","Mountains","Swamp","Desert","Arctic"]},
+  {name:"Lion / Tiger",type:"Wildlife",level:3,biomes:["Forest","Jungle","Plains","Hills","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Lizardfolk",type:"",level:2,biomes:["Cave","Ruin","Forest","Jungle","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Mammoth",type:"Wildlife",level:9,biomes:["Mountains","Arctic"]},
+  {name:"Manta Ray, Giant",type:"Wildlife",level:8,biomes:["Coast / River / Lake"]},
+  {name:"Manticore",type:"Wildlife",level:6,biomes:["Cave","Temple of Chaos","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake"]},
+  {name:"Mastiff",type:"Wildlife",level:1,biomes:["Ruin","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Medusa",type:"",level:8,biomes:["Cave","Ruin","Temple of Chaos","Forest","Jungle","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Merfolk",type:"",level:2,biomes:["Coast / River / Lake"]},
+  {name:"Mimic",type:"Wildlife",level:5,biomes:["Cave","Ruin","Tomb"]},
+  {name:"Minotaur",type:"",level:7,biomes:["Cave","Ruin","Temple of Chaos","Forest","Jungle","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Moose",type:"Wildlife",level:4,biomes:["Forest","Mountains","Swamp"]},
+  {name:"Mordanticus the Flayed",type:"Undead",level:19,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Mummy",type:"Undead",level:10,biomes:["Ruin","Tomb","Temple of Chaos","Mountains","Desert","Arctic"]},
+  {name:"Mushroomfolk",type:"",level:3,biomes:["Cave","Ruin","Forest","Jungle","Swamp","Coast / River / Lake"]},
+  {name:"Naga",type:"",level:9,biomes:["Cave","Ruin","Temple of Chaos","Jungle","Mountains","Swamp","Desert"]},
+  {name:"Naga, Bone",type:"Undead",level:6,biomes:["Ruin","Tomb","Temple of Chaos","Jungle","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Nightmare",type:"Devil",level:6,biomes:["Temple of Chaos","Forest","Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Obe-Ixx of Azarumme",type:"Undead",level:16,biomes:["Ruin","Tomb","Temple of Chaos","Jungle","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Ochre Jelly",type:"Ooze",level:4,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Hills","Moor","Mountains","Swamp","Coast / River / Lake"]},
+  {name:"Octopus, Giant",type:"Wildlife",level:5,biomes:["Coast / River / Lake"]},
+  {name:"Ogre",type:"",level:6,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Oni",type:"Demon",level:7,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Orc",type:"Orc",level:1,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Orc, Chieftain",type:"Orc",level:4,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Otyugh",type:"Wildlife",level:7,biomes:["Cave","Ruin","Forest","Jungle","Swamp","Coast / River / Lake"]},
+  {name:"Primordial Slime",type:"Outsider",level:6,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Jungle","Swamp","Desert"]},
+  {name:"Void Spawn",type:"Outsider",level:7,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Void Spider",type:"Outsider",level:5,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Rime Walker",type:"Outsider",level:9,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Owlbear",type:"Wildlife",level:6,biomes:["Cave","Ruin","Forest","Hills","Moor","Swamp","Arctic"]},
+  {name:"Panther",type:"Wildlife",level:3,biomes:["Forest","Jungle","Plains","Hills","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Peasant",type:"Human",level:1,biomes:["Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Pegasus",type:"Wildlife",level:3,biomes:["Jungle","Plains","Hills","Moor","Mountains","Swamp"]},
+  {name:"Phoenix",type:"Fire",level:13,biomes:["Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Piranha, Swarm",type:"Wildlife",level:3,biomes:["Jungle","Swamp","Coast / River / Lake"]},
+  {name:"Pirate",type:"Human",level:1,biomes:["Cave","Jungle","Swamp","Coast / River / Lake"]},
+  {name:"Priest",type:"Human",level:5,biomes:["Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Purple Worm",type:"Wildlife",level:12,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Rakshasa",type:"Demon",level:8,biomes:["Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Rat",type:"Wildlife",level:0,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake"]},
+  {name:"Rat, Giant",type:"Wildlife",level:1,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake"]},
+  {name:"Rat, Dire",type:"Wildlife",level:2,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake"]},
+  {name:"Rat, Swarm",type:"Wildlife",level:6,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake"]},
+  {name:"Rathgamnon",type:"Celestial",level:19,biomes:["Mountains","Desert","Arctic"]},
+  {name:"Reaver",type:"Human",level:6,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Remorhaz",type:"Wildlife",level:10,biomes:["Arctic"]},
+  {name:"Rhinoceros",type:"Wildlife",level:5,biomes:["Jungle","Plains","Swamp"]},
+  {name:"Roc",type:"Wildlife",level:15,biomes:["Plains","Hills","Moor","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Roper",type:"Wildlife",level:6,biomes:["Cave","Ruin","Forest","Jungle","Hills","Moor","Mountains","Swamp"]},
+  {name:"Rot Flower",type:"Wildlife",level:2,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Swamp","Coast / River / Lake"]},
+  {name:"Rust Monster",type:"Wildlife",level:4,biomes:["Cave","Ruin","Forest","Jungle","Moor","Desert"]},
+  {name:"Sahuagin",type:"",level:2,biomes:["Moor","Coast / River / Lake"]},
+  {name:"Salamander",type:"Fire",level:5,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Desert"]},
+  {name:"Scarab, Swarm",type:"Wildlife",level:3,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Scarecrow",type:"Demon",level:3,biomes:["Temple of Chaos","Jungle","Plains","Hills","Moor","Swamp","Coast / River / Lake"]},
+  {name:"Scorpion",type:"Wildlife",level:0,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Scorpion, Giant",type:"Wildlife",level:3,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Shadow",type:"Undead",level:3,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Hills","Moor","Mountains","Desert"]},
+  {name:"Shambling Mound",type:"Construct",level:4,biomes:["Cave","Ruin","Forest","Jungle","Hills","Swamp","Coast / River / Lake"]},
+  {name:"Shark",type:"Wildlife",level:3,biomes:["Moor","Coast / River / Lake"]},
+  {name:"Shark, Megalodon",type:"Wildlife",level:8,biomes:["Coast / River / Lake"]},
+  {name:"Siren",type:"Fae",level:4,biomes:["Cave","Ruin","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Skeleton",type:"Undead",level:2,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Smilodon",type:"Wildlife",level:3,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Snake, Giant",type:"Wildlife",level:5,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Snake, Cobra",type:"Wildlife",level:1,biomes:["Cave","Ruin","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Snake, Swarm",type:"Wildlife",level:4,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Soldier",type:"Human",level:2,biomes:["Ruin","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Sphinx",type:"",level:9,biomes:["Mountains","Desert","Arctic"]},
+  {name:"Spider",type:"Wildlife",level:0,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Spider, Giant",type:"Wildlife",level:3,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Spider, Swarm",type:"Wildlife",level:2,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Stingbat",type:"Wildlife",level:1,biomes:["Cave","Ruin","Tomb","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Strangler",type:"",level:3,biomes:["Cave","Ruin","Temple of Chaos","Forest","Jungle","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Ten-eyed Oracle",type:"",level:18,biomes:["Cave","Ruin","Tomb","Temple of Chaos"]},
+  {name:"The Tarrasque",type:"",level:30,biomes:["Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"The Wandering Merchant",type:"Celestial",level:15,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Thief",type:"Human",level:3,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Thug",type:"Human",level:1,biomes:["Cave","Ruin","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Treant",type:"",level:8,biomes:["Forest","Jungle","Swamp","Coast / River / Lake"]},
+  {name:"Troll",type:"",level:5,biomes:["Cave","Ruin","Temple of Chaos","Forest","Jungle","Swamp"]},
+  {name:"Troll, Frost",type:"",level:7,biomes:["Forest","Mountains","Arctic"]},
+  {name:"Unicorn",type:"Celestial",level:4,biomes:["Forest","Plains","Hills","Moor","Swamp"]},
+  {name:"Vampire",type:"Undead",level:11,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Vampire Spawn",type:"Undead",level:5,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Violet Fungus",type:"Wildlife",level:2,biomes:["Cave","Ruin","Forest","Jungle","Hills","Swamp","Coast / River / Lake"]},
+  {name:"Viperian",type:"Viperian",level:3,biomes:["Ruin","Temple of Chaos","Jungle","Mountains","Swamp","Coast / River / Lake"]},
+  {name:"Viperian, Ophid",type:"Viperian",level:6,biomes:["Ruin","Temple of Chaos","Jungle","Mountains","Swamp","Coast / River / Lake"]},
+  {name:"Viperian, Wizard",type:"Viperian",level:8,biomes:["Ruin","Temple of Chaos","Jungle","Mountains","Swamp","Coast / River / Lake"]},
+  {name:"Vulture",type:"Wildlife",level:1,biomes:["Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Wasp, Giant",type:"Wildlife",level:2,biomes:["Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Werewolf",type:"",level:4,biomes:["Ruin","Temple of Chaos","Forest","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Wererat",type:"",level:3,biomes:["Cave","Ruin","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Wight",type:"Undead",level:3,biomes:["Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Will-O'-Wisp",type:"Fae",level:2,biomes:["Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert"]},
+  {name:"Wolf",type:"Wildlife",level:2,biomes:["Ruin","Temple of Chaos","Forest","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Wolf, Dire",type:"Wildlife",level:4,biomes:["Ruin","Temple of Chaos","Forest","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Wolf, Winter",type:"Fae",level:5,biomes:["Mountains","Arctic"]},
+  {name:"Worg",type:"Goblinoid",level:3,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Wraith",type:"Undead",level:8,biomes:["Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Wyvern",type:"Wildlife",level:8,biomes:["Cave","Ruin","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+  {name:"Zombie",type:"Undead",level:2,biomes:["Cave","Ruin","Tomb","Temple of Chaos","Forest","Jungle","Plains","Hills","Moor","Mountains","Swamp","Coast / River / Lake","Desert","Arctic"]},
+];
+
+const SENTIENT_TYPES = ["Human","Goblinoid","Orc","Kobold","Drow","Demon","Devil","Fae","Celestial","Viperian","Outsider"];
+function isSentient(c) {
+  return SENTIENT_TYPES.includes(c.type) || ["Cyclops","Centaur","Doppelganger","Gnoll","Deep One","Beastman","Lizardfolk","Merfolk","Sahuagin","Harpy","Minotaur","Mushroomfolk","Naga","Ogre","Oni","Sphinx","Strangler","Treant","Troll","Troll, Frost","Werewolf","Wererat","Gnome, Deep","Ten-eyed Oracle","Grimlow","Brain Eater","Duergar","Cave Brute"].includes(c.name);
+}
+
+const ACTIVITIES_ONE = {
+  any: ["Lost","Hurt","Trapped","Sleeping","Eating","Sick","Tracking Prey","Lying in Ambush","Fighting","Mating Behavior","Starving","Returning Home","Fleeing","Threatening"],
+  sentient: ["Plotting","Holding Captives","Scavenging","Building a Camp","Demolishing","Doing drugs or drinking","Artistic pursuits","Spying","Committing a crime","Searching","Religious ritual","Setting, putting out, or fleeing a fire","Weeping","Excreting","Bathing","Socializing","Gloating","Something strange and unusual"]
+};
+
+const ACTIVITIES_TWO = {
+  any: ["Eating","Tracking Prey","Lying in Ambush","Fleeing","Fighting","Threatening"],
+  sentient: ["Holding Captives","Spying","Committing a crime","Socializing","Gloating","Something strange and unusual"]
+};
+
+const DANGER_TABLE = [
+  { label: "Safe", chance: 0.10, multiplier: 0.5 },
+  { label: "Unsafe", chance: 0.65, multiplier: 1 },
+  { label: "Risky", chance: 0.20, multiplier: 2 },
+  { label: "Deadly", chance: 0.05, multiplier: 4 },
+];
+
+const SPLIT_TABLE = [
+  { a: 4, b: 1 }, { a: 2, b: 1 }, { a: 1, b: 1 }, { a: 1, b: 2 }, { a: 1, b: 4 }
+];
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function rand() { return Math.random(); }
+function pick(arr) { return arr[Math.floor(rand() * arr.length)]; }
+function rollDanger() {
+  let r = rand(); let acc = 0;
+  for (const d of DANGER_TABLE) { acc += d.chance; if (r < acc) return d; }
+  return DANGER_TABLE[1];
+}
+
+function getCreaturesForBiome(biome) {
+  return CREATURES.filter(c => c.biomes.includes(biome));
+}
+
+function getCreaturesInRange(pool, minL, maxL) {
+  return pool.filter(c => c.level >= minL && c.level <= maxL);
+}
+
+function getLevelRange(slot, center, hazard, diceType) {
+  // How far from center (0=center slot, positive=edges)
+  const dist = Math.abs(slot - center);
+  const maxMid = diceType === '2d6' ? 1 : 1;
+  if (dist <= maxMid) {
+    // Center 3 slots: full hazard range
+    return { min: 1, max: hazard };
+  }
+  // Each step out from center 3 adds 0.5*hazard to min and 1*hazard to max
+  const extra = dist - maxMid;
+  const min = Math.max(0, Math.round(hazard * 0.5 * extra));
+  const max = hazard + Math.round(hazard * 1 * extra);
+  return { min, max };
+}
+
+function pickActivity(c1, c2) {
+  if (c2) {
+    const pool = [...ACTIVITIES_TWO.any];
+    if (isSentient(c1) || isSentient(c2)) pool.push(...ACTIVITIES_TWO.sentient);
+    const act = pick(pool);
+    return `${c1.name} ${act.toLowerCase()} ${c2.name}`;
+  } else {
+    const pool = [...ACTIVITIES_ONE.any];
+    if (isSentient(c1)) pool.push(...ACTIVITIES_ONE.sentient);
+    return pick(pool);
+  }
+}
+
+function countCreatures(totalLevels, creatureLevel) {
+  if (creatureLevel <= 0) return Math.max(1, Math.round(totalLevels));
+  return Math.max(1, Math.round(totalLevels / creatureLevel));
+}
+
+function formatCount(n, name) {
+  return `${n}× ${name}`;
+}
+
+function generateEncounter(biomePool, levelRange, partySize, hazard, dualChancePct) {
+  const { min, max } = levelRange;
+  let pool = getCreaturesInRange(biomePool, min, max);
+  if (pool.length === 0) return null; // No creatures fit
+
+  // Danger
+  const danger = rollDanger();
+  const totalLevels = hazard * partySize * danger.multiplier;
+
+  // Dual creature?
+  const isDual = rand() * 100 < dualChancePct;
+
+  const c1 = pick(pool);
+
+  if (isDual) {
+    // Try to pick different creature
+    const pool2 = pool.filter(x => x.name !== c1.name);
+    if (pool2.length === 0) {
+      // Only one creature type available, fall back to single
+      const n1 = countCreatures(totalLevels, c1.level);
+      const activity = pickActivity(c1, null);
+      return { danger, c1, n1, c2: null, n2: null, activity };
+    }
+    const c2 = pick(pool2);
+    const split = pick(SPLIT_TABLE);
+    const total = split.a + split.b;
+    const levels1 = totalLevels * (split.a / total);
+    const levels2 = totalLevels * (split.b / total);
+    const n1 = countCreatures(levels1, c1.level);
+    const n2 = countCreatures(levels2, c2.level);
+    const activity = pickActivity(c1, c2);
+    return { danger, c1, n1, c2, n2, activity };
+  } else {
+    const n1 = countCreatures(totalLevels, c1.level);
+    const activity = pickActivity(c1, null);
+    return { danger, c1, n1, c2: null, n2: null, activity };
+  }
+}
+
+// ============================================================
+// DICE TABLE STRUCTURE
+// ============================================================
+function get2d6Slots() {
+  // 2d6: 2–12, probabilities, center=7
+  const center = 7;
+  return [2,3,4,5,6,7,8,9,10,11,12].map(v => ({ result: v, center }));
+}
+
+function get2d8Slots() {
+  // 2d8: 2–16, center=9
+  const center = 9;
+  return [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].map(v => ({ result: v, center }));
+}
+
+// ============================================================
+// UI FUNCTIONS
+// ============================================================
+function updateHazard(el) {
+  document.getElementById('hazardDisplay').textContent = el.value;
+  const pct = ((el.value - 1) / 9 * 100).toFixed(0);
+  el.style.setProperty('--val', pct + '%');
+}
+
+function generate() {
+  const biome = document.getElementById('biome').value;
+  const hazard = parseInt(document.getElementById('hazardLevel').value);
+  const partySize = parseInt(document.getElementById('partySize').value);
+  const dualChance = parseInt(document.getElementById('dualChance').value);
+  const tableSize = document.getElementById('tableSize').value;
+
+  if (!biome) { alert('Please select a biome first.'); return; }
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Summoning darkness...';
+
+  setTimeout(() => {
+    try {
+      const result = buildOutput(biome, hazard, partySize, dualChance, tableSize);
+      renderOutput(result, biome, hazard, tableSize);
+    } catch(e) {
+      console.error(e);
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<span class="dice-icon">⚄</span> Consult the Darkness';
+  }, 300);
+}
+
+function buildOutput(biome, hazard, partySize, dualChance, tableSize) {
+  const biomePool = getCreaturesForBiome(biome);
+  if (tableSize === 'single') {
+    const range = { min: Math.round(hazard * 0.5), max: hazard };
+    const enc = generateEncounter(biomePool, range, partySize, hazard, dualChance);
+    return [{ result: null, encounter: enc }];
+  }
+
+  const slots = tableSize === '2d6' ? get2d6Slots() : get2d8Slots();
+  const diceType = tableSize;
+  const center = tableSize === '2d6' ? 7 : 9;
+
+  return slots.map(slot => {
+    const range = getLevelRange(slot.result, center, hazard, diceType);
+    const enc = generateEncounter(biomePool, range, partySize, hazard, dualChance);
+    return { result: slot.result, range, encounter: enc };
+  });
+}
+
+function renderOutput(rows, biome, hazard, tableSize) {
+  const outputEl = document.getElementById('output');
+  const container = document.getElementById('tableContainer');
+  const titleEl = document.getElementById('outputTitle');
+  const markdownSection = document.getElementById('markdownSection');
+
+  outputEl.style.display = 'block';
+  outputEl.classList.remove('fade-in');
+  void outputEl.offsetWidth; // reflow
+  outputEl.classList.add('fade-in');
+
+  const isSingle = tableSize === 'single';
+
+  titleEl.textContent = isSingle
+    ? `⚔ Encounter — ${biome} (Hazard ${hazard})`
+    : `⚔ ${tableSize.toUpperCase()} Encounter Table — ${biome} (Hazard ${hazard})`;
+
+  document.getElementById('copyBtn').style.display = isSingle ? 'none' : '';
+  markdownSection.style.display = isSingle ? 'none' : '';
+
+  if (isSingle) {
+    const enc = rows[0].encounter;
+    container.innerHTML = renderSingleEncounter(enc);
+    return;
+  }
+
+  // TABLE
+  let html = `
+    <table class="encounter-table">
+      <thead>
+        <tr>
+          <th>Roll</th>
+          <th>Creatures</th>
+          <th>Activity</th>
+          <th>Danger</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  const mdRows = [];
+  mdRows.push(`| Roll | Creatures | Activity | Danger |`);
+  mdRows.push(`|------|-----------|----------|--------|`);
+
+  for (const row of rows) {
+    const enc = row.encounter;
+    if (!enc) {
+      html += `<tr><td class="dice-result">${row.result}</td><td colspan="3" class="no-encounter">No creatures of this level exist in this biome</td></tr>`;
+      mdRows.push(`| **${row.result}** | *No creatures of this level in this biome* | — | — |`);
+      continue;
+    }
+
+    const creaturesText = enc.c2
+      ? `${formatCount(enc.n1, enc.c1.name)} &amp; ${formatCount(enc.n2, enc.c2.name)}`
+      : formatCount(enc.n1, enc.c1.name);
+    const creaturesTextMd = enc.c2
+      ? `${enc.n1}× ${enc.c1.name} & ${enc.n2}× ${enc.c2.name}`
+      : `${enc.n1}× ${enc.c1.name}`;
+
+    const dangerClass = `danger-${enc.danger.label.toLowerCase()}`;
+
+    html += `
+      <tr>
+        <td class="dice-result">${row.result}</td>
+        <td><span class="creature-name">${creaturesText}</span>
+            <br><span class="creature-level">Lvl ${enc.c1.level}${enc.c2 ? ` / Lvl ${enc.c2.level}` : ''}</span></td>
+        <td class="activity-text">${enc.activity}</td>
+        <td><span class="danger-badge ${dangerClass}">${enc.danger.label}</span></td>
+      </tr>
+    `;
+    mdRows.push(`| **${row.result}** | ${creaturesTextMd} | ${enc.activity} | ${enc.danger.label} |`);
+  }
+
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+
+  // Markdown
+  markdownSection.style.display = 'block';
+  const mdHeader = `## ${biome} Encounter Table (${tableSize.toUpperCase()}, Hazard ${hazard})\n\n`;
+  document.getElementById('markdownOutput').textContent = mdHeader + mdRows.join('\n');
+
+  outputEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderSingleEncounter(enc) {
+  if (!enc) return `<div class="warn">No creatures of this level exist in this biome. Try a different hazard level.</div>`;
+
+  const dangerClass = `danger-${enc.danger.label.toLowerCase()}`;
+  const creatures = enc.c2
+    ? `${enc.n1}× ${enc.c1.name} (Lvl ${enc.c1.level}) &amp; ${enc.n2}× ${enc.c2.name} (Lvl ${enc.c2.level})`
+    : `${enc.n1}× ${enc.c1.name} (Lvl ${enc.c1.level})`;
+
+  return `
+    <div class="single-encounter-box">
+      <h3>Encounter</h3>
+      <div class="detail-row">
+        <span class="detail-label">Creatures</span>
+        <span class="detail-value">${creatures}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Activity</span>
+        <span class="detail-value" style="font-style:italic;">${enc.activity}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Danger</span>
+        <span class="danger-badge ${dangerClass}">${enc.danger.label}</span>
+      </div>
+    </div>
+  `;
+}
+
+function copyMarkdown() {
+  const md = document.getElementById('markdownOutput').textContent;
+  navigator.clipboard.writeText(md).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy Markdown', 1500);
+  });
+}
+
+// Init slider
+updateHazard(document.getElementById('hazardLevel'));
+
+</script>  <footer style="
+    text-align: center;
+    padding: 32px 20px 40px;
+    border-top: 1px solid #2e2e2e;
+    margin-top: 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    color: #555555;
+    letter-spacing: 0.5px;
+    line-height: 1.7;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+  ">
+    ShadowDark Encounter Generator is an independent product published under the Shadowdark RPG Third-Party License and is not affiliated with The Arcane Library, LLC. Shadowdark RPG &copy; 2023 The Arcane Library, LLC.
+  </footer>
+
+</body>
+</html>
